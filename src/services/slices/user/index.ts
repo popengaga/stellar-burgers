@@ -3,22 +3,18 @@ import {
   createAsyncThunk,
   createSlice
 } from '@reduxjs/toolkit';
-
 import {
   TLoginData,
   TRegisterData,
-  forgotPasswordApi,
   getUserApi,
   loginUserApi,
   logoutApi,
   registerUserApi,
-  resetPasswordApi,
   updateUserApi
 } from '@api';
 
 import { TUser } from '@utils-types';
 import { clearTokens, storeTokens } from '@auth';
-
 type TUserState = {
   isAuthChecked: boolean;
   isAuthenticated: boolean;
@@ -27,7 +23,7 @@ type TUserState = {
   data: TUser;
 };
 
-const initialState: TUserState = {
+export const initialState: TUserState = {
   isAuthChecked: false,
   isAuthenticated: false,
   data: {
@@ -35,77 +31,38 @@ const initialState: TUserState = {
     email: ''
   }
 };
-
 export const register = createAsyncThunk<TUser, TRegisterData>(
   'user/register',
   async (data, { rejectWithValue }) => {
     const response = await registerUserApi(data);
-
     if (!response?.success) {
       return rejectWithValue(response);
     }
-
     const { user, refreshToken, accessToken } = response;
-
     storeTokens(refreshToken, accessToken);
-
     return user;
   }
 );
-
 export const login = createAsyncThunk<TUser, TLoginData>(
   'user/login',
   async (data, { rejectWithValue }) => {
     const response = await loginUserApi(data);
-
     if (!response?.success) {
       return rejectWithValue(response);
     }
-
     const { user, refreshToken, accessToken } = response;
-
     storeTokens(refreshToken, accessToken);
-
     return user;
   }
 );
-
 export const logout = createAsyncThunk(
   'user/logout',
   async (_, { rejectWithValue }) => {
     const response = await logoutApi();
-
     if (!response?.success) {
       return rejectWithValue(response);
     }
-
     clearTokens();
-  }
-);
-
-export const resetPassword = createAsyncThunk<
-  boolean,
-  { password: string; token: string }
->('user/resetPassword', async (data, { rejectWithValue }) => {
-  const response = await resetPasswordApi(data);
-
-  if (!response?.success) {
-    return rejectWithValue(response);
-  }
-
-  return response.success;
-});
-
-export const forgotPassword = createAsyncThunk<boolean, Pick<TUser, 'email'>>(
-  'user/forgotPassword',
-  async (data, { rejectWithValue }) => {
-    const response = await forgotPasswordApi(data);
-
-    if (!response?.success) {
-      return rejectWithValue(response);
-    }
-
-    return response.success;
   }
 );
 
@@ -113,28 +70,22 @@ export const fetchUser = createAsyncThunk(
   'user/fetch',
   async (_, { rejectWithValue }) => {
     const response = await getUserApi();
-
     if (!response?.success) {
       return rejectWithValue(response);
     }
-
     return response.user;
   }
 );
-
 export const updateUser = createAsyncThunk<TUser, Partial<TRegisterData>>(
   'user/update',
   async (data, { rejectWithValue }) => {
     const response = await updateUserApi(data);
-
     if (!response?.success) {
       return rejectWithValue(response);
     }
-
     return response.user;
   }
 );
-
 const slice = createSlice({
   name: 'user',
   initialState,
@@ -147,7 +98,6 @@ const slice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.registerError = undefined;
         state.isAuthenticated = true;
-
         state.data = action.payload;
       })
       .addCase(register.rejected, (state, action) => {
@@ -161,7 +111,6 @@ const slice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.loginError = undefined;
         state.isAuthenticated = true;
-
         state.data = action.payload;
       })
       .addCase(login.rejected, (state, action) => {
@@ -171,7 +120,6 @@ const slice = createSlice({
       })
       .addCase(logout.fulfilled, (state) => {
         state.isAuthenticated = false;
-
         state.data = {
           email: '',
           name: ''
@@ -180,7 +128,6 @@ const slice = createSlice({
       .addCase(fetchUser.fulfilled, (state, action) => {
         state.isAuthenticated = true;
         state.isAuthChecked = true;
-
         state.data = action.payload;
       })
       .addCase(fetchUser.rejected, (state) => {
@@ -191,5 +138,4 @@ const slice = createSlice({
       });
   }
 });
-
 export default slice.reducer;
